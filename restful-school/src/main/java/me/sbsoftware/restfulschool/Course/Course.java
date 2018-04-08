@@ -59,4 +59,8 @@ public class Course {
     public void setTopic(Topic topic) {
         this.topic = topic;
     }
+
+    public String toString() {
+        return "Course: id: " + this.id + ", name: " + this.name + ", description: " + this.description + ", parent topic: " + this.topic.toString();
+    }
 }

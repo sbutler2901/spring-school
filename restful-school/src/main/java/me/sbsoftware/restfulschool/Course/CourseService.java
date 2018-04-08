@@ -13,33 +13,37 @@ public class CourseService {
     @Autowired
     private CourseRepository courseRepository;
 
+    /**
+     * Performs request to DB retrieving all courses
+     * @return all courses found in DB
+     */
+    List<Course> getAllCourses(String topicId) { return courseRepository.findByTopicId(topicId); }
 
-    public List<Course> getAllCourses(String topicId) {
-        List<Course> courses = new ArrayList<>();
+    /**
+     * Requests a specific course from the DB
+     * @param id of the course to be retrieved
+     * @return the course found matching the id provide if it exists, null otherwise
+     */
+    Course getCourse(String id) { return courseRepository.findById(id).orElse(null); }
 
-        courseRepository.findByTopicId(topicId);
-        return courses;
-    }
+    /**
+     * Adds a new course to the DB
+     * @param course to be added to the Db
+     * @return the course saved in the DB
+     */
+    Course addCourse(Course course) { return courseRepository.save(course); }
 
-    public Course getCourse(String id) {
-        return courseRepository.findById(id).orElse(null);
-    }
+    // TODO: ensure course exists
+    /**
+     * Updates a course in the DB
+     * @param course to be updated in the DB
+     */
+    void updateCourse(Course course) { courseRepository.save(course); }
 
-
-    public Course addCourse(Course course) {
-        return courseRepository.save(course);
-    }
-
-    public void updateCourse(Course course) {
-        courseRepository.save(course);
-//        Topic toUpdate = topicList.stream().filter(t -> t.getId().equals(id)).findFirst().get();
-//            toUpdate.setName(topic.getName());
-//            toUpdate.setDescription(topic.getDescription());
-    }
-
-    public void deleteCourse(String id) {
-        courseRepository.deleteById(id);
-//        topicList.removeIf(t -> t.getId().equals(id));
-//        topicList.remove(id);
-    }
+    // TODO: Handle error thrown
+    /**
+     * Deletes a course from the DB
+     * @param id of the course to be deleted
+     */
+    void deleteCourse(String id) { courseRepository.deleteById(id); }
 }
