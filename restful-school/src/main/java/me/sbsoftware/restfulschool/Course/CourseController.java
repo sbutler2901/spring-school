@@ -26,6 +26,7 @@ public class CourseController {
     @RequestMapping(value="/topics/{topicId}/courses", method=RequestMethod.POST)
     public Course addCourse(@RequestBody Course course, @PathVariable String topicId) {
         course.setTopic(new Topic(topicId, "", ""));
+
         return courseService.addCourse(course);
     }
 

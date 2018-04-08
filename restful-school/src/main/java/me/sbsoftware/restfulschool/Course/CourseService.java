@@ -14,20 +14,11 @@ public class CourseService {
     private CourseRepository courseRepository;
 
 
-    List<Course> getAllCourses(String topicId) {
-        List<Course> courses = new ArrayList<>();
+    List<Course> getAllCourses(String topicId) { return courseRepository.findByTopicId(topicId); }
 
-        courseRepository.findByTopicId(topicId);
-        return courses;
-    }
+    Course getCourse(String id) { return courseRepository.findById(id).orElse(null); }
 
-    Course getCourse(String id) {
-        return courseRepository.findById(id).orElse(null);
-    }
-
-    Course addCourse(Course course) {
-        return courseRepository.save(course);
-    }
+    Course addCourse(Course course) { return courseRepository.save(course); }
 
     void updateCourse(Course course) { courseRepository.save(course); }
 

@@ -49,4 +49,6 @@ public class Topic {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String toString() { return "Topic: id: " + this.id + ", name: " + this.name + ", description: " + this.description; }
 }

@@ -30,7 +30,7 @@ public class TopicController {
     @RequestMapping(value="/topics/{id}", method=RequestMethod.PUT)
     public void updateTopic(@PathVariable String id, @RequestBody Topic topic) {
         if ( id.equals(topic.getId()) ) {
-            topicService.updateTopic(id, topic);
+            topicService.updateTopic(topic);
         }
     }
 

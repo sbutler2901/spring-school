@@ -28,7 +28,8 @@ public class TopicService {
         return topicRepository.save(topic);
     }
 
-    void updateTopic(String id, Topic topic) { topicRepository.save(topic); }
+    void updateTopic(Topic topic) { topicRepository.save(topic); }
 
+    // TODO: handle deletion of topic which has child courses
     void deleteTopic(String id) { topicRepository.deleteById(id); }
 }
