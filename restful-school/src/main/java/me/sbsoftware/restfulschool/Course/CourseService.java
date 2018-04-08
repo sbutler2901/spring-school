@@ -14,32 +14,22 @@ public class CourseService {
     private CourseRepository courseRepository;
 
 
-    public List<Course> getAllCourses(String topicId) {
+    List<Course> getAllCourses(String topicId) {
         List<Course> courses = new ArrayList<>();
 
         courseRepository.findByTopicId(topicId);
         return courses;
     }
 
-    public Course getCourse(String id) {
+    Course getCourse(String id) {
         return courseRepository.findById(id).orElse(null);
     }
 
-
-    public Course addCourse(Course course) {
+    Course addCourse(Course course) {
         return courseRepository.save(course);
     }
 
-    public void updateCourse(Course course) {
-        courseRepository.save(course);
-//        Topic toUpdate = topicList.stream().filter(t -> t.getId().equals(id)).findFirst().get();
-//            toUpdate.setName(topic.getName());
-//            toUpdate.setDescription(topic.getDescription());
-    }
+    void updateCourse(Course course) { courseRepository.save(course); }
 
-    public void deleteCourse(String id) {
-        courseRepository.deleteById(id);
-//        topicList.removeIf(t -> t.getId().equals(id));
-//        topicList.remove(id);
-    }
+    void deleteCourse(String id) { courseRepository.deleteById(id); }
 }

@@ -35,8 +35,8 @@ public class TopicController {
     }
 
     @RequestMapping(value="/topics/{id}", method=RequestMethod.DELETE)
-    public String deleteTopic(@PathVariable String id) {
-        return topicService.deleteTopic(id);
+    public void deleteTopic(@PathVariable String id) {
+        topicService.deleteTopic(id);
     }
 }
 
