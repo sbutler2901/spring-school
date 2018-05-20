@@ -9,18 +9,20 @@
 \
 // spring applicaiton\
 1. gradle assemble\
-2. \'93docker build -t sbutler2901/restful-school:latest .\'94\
-3. \'93docker run -d -p 8080:8080 sbutler2901/restful-school\'94\
+2. docker build -t sbutler2901/restful-school:latest .\
+3. docker run -d -p 8080:8080 --name restful-school --network restful-net sbutler2901/restful-school	// db should be running before running this command\
 \
 // mariadb\
-docker run -d -p 3306:3306 --env-file mariadb.env mariadb\
+docker run -d -p 3306:3306 --env-file mariadb.env --name <mariadb> --network restful-net mariadb\
 	// the env file variables must match those set in the spring applications \'93application.properties\'94 file\
-env file should at least contain\
+env file should at least contain:\
 	MYSQL_ROOT_PASSWORD=<password>\
 	MYSQL_DATABASE=<db_name>\
+	// these should also be reflected in the application.properties file\
 \
 /// Links / Notes\
 \
 \
 spring application.properties: \
+	- the dns name used for the datasource url should match the name given to the DB container instance. (This requires both instances to be on the same network to provide this dns resolution)\
 	https://docs.spring.io/spring-boot/docs/current/reference/html/howto-database-initialization.html}
