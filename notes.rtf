@@ -7,13 +7,15 @@
 
 \f0\fs36 \cf0 Steps:\
 \
+// docker network:\
+1. docker network create spring-net\
 // spring applicaiton\
 1. gradle assemble\
-2. docker build -t sbutler2901/restful-school:latest .\
-3. docker run -d -p 8080:8080 --name restful-school --network restful-net sbutler2901/restful-school	// db should be running before running this command\
+2. docker build -t sbutler2901/spring-school:latest .\
+3. docker run -d -p 8080:8080 --name spring-school --network spring-net sbutler2901/spring-school	// db should be running before running this command\
 \
 // mariadb\
-docker run -d -p 3306:3306 --env-file mariadb.env --name <mariadb> --network restful-net mariadb\
+docker run -d -p 3306:3306 --env-file mariadb.env --name <mariadb> --network spring-net mariadb\
 	// the env file variables must match those set in the spring applications \'93application.properties\'94 file\
 env file should at least contain:\
 	MYSQL_ROOT_PASSWORD=<password>\
@@ -24,5 +26,13 @@ env file should at least contain:\
 \
 \
 spring application.properties: \
-	- the dns name used for the datasource url should match the name given to the DB container instance. (This requires both instances to be on the same network to provide this dns resolution)\
-	https://docs.spring.io/spring-boot/docs/current/reference/html/howto-database-initialization.html}
+	DNS:\
+		- the dns name used for the datasource url should match the name given to the DB container instance. (This requires both instances to be on the same network to provide this dns resolution)\
+			- https://docs.spring.io/spring-boot/docs/current/reference/html/howto-database-initialization.html\
+		- If using docker dns the name given to the mariadb container can be used for dns resolution in the properties file such as: \'93spring.datasource.url=jdbc:mariadb://<mariadb>:3306/db_school\'94\
+		- Building the application involves running its tests and therefore need a running instance\
+		- run a maria db container with the appropriate ports exposed to the localhost\
+		- macOS: add \'93<mariadb>\'94 to the /etc/hosts file mapping it to localhost (127.0.0.1) and flush the dns cache. Test with \'93traceroute <mariadb>\'94\
+			- https://superuser.com/questions/299425/how-can-i-resolve-an-internal-ip-address-to-a-hostname-on-os-x\
+		- Once the container is running and the local dns is established building locally can be performed without changing the application.properties file\
+}
