@@ -35,4 +35,7 @@ spring application.properties: \
 		- macOS: add \'93<mariadb>\'94 to the /etc/hosts file mapping it to localhost (127.0.0.1) and flush the dns cache. Test with \'93traceroute <mariadb>\'94\
 			- https://superuser.com/questions/299425/how-can-i-resolve-an-internal-ip-address-to-a-hostname-on-os-x\
 		- Once the container is running and the local dns is established building locally can be performed without changing the application.properties file\
+\
+gradle pushImage:\
+	- Expects docker repository password to be stored as environment variable use \'93export DOCKERHUB_PASS=<password>\'94 \
 }

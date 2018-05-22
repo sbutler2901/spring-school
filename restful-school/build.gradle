@@ -42,9 +42,18 @@ dependencies {
 }
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.DockerRegistryCredentials
 
 task buildImage(type: DockerBuildImage) {
   dependsOn build
   tag = "sbutler2901/spring-school:${project.version}"
   inputDir = projectDir
+}
+task pushImage(type: DockerPushImage) {
+  imageName = "sbutler2901/spring-school"
+  tag = "${project.version}"
+  registryCredentials = new DockerRegistryCredentials()
+  registryCredentials.username = "sbutler2901"
+  registryCredentials.password = "$System.env.DOCKERHUB_PASS"
 }
