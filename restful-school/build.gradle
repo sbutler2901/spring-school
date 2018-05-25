@@ -22,9 +22,6 @@ group = 'me.sbsoftware'
 version = '0.1.0'
 sourceCompatibility = 1.8
 
-/*repositories {
-  mavenCentral()
-}*/
 dependencies {
         // Spring
 	compile('org.springframework.boot:spring-boot-starter-data-jpa')
@@ -43,12 +40,81 @@ dependencies {
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.network.DockerCreateNetwork
+import com.bmuschko.gradle.docker.tasks.network.DockerRemoveNetwork
 import com.bmuschko.gradle.docker.DockerRegistryCredentials
 
-task buildImage(type: DockerBuildImage) {
+def containerNetwork = 'school-net'
+def dbPass = "$System.env.DB_PASS"
+def dbName = "$System.env.DB_NAME"
+
+task buildSchoolImage(type: DockerBuildImage) {
   dependsOn build
   tag = "sbutler2901/spring-school:${project.version}"
   inputDir = projectDir
+}
+
+task removeSchoolNetwork(type: DockerRemoveNetwork) {
+  println "removing school network1"
+  targetNetworkId { containerNetwork }
+  onError { exception ->
+      if (exception.message.contains('not found')) {
+          println 'Docker Network not found.'
+      }
+  }
+}
+
+task createSchoolNetwork(type: DockerCreateNetwork, dependsOn: [removeSchoolNetwork]) {
+  networkId = containerNetwork
+}
+
+task stopDBContainer(type: DockerStopContainer) {
+  targetContainerId { createDBContainer.getContainerName() }
+  onError { exception ->
+    if (true) {} else if (exception.message.contains('No such container')) {
+          println 'Container not running'
+    } else {
+      throw exception
+    }
+  }
+}
+
+task removeDBContainer(type: DockerRemoveContainer, dependsOn: [stopDBContainer]) {
+  targetContainerId { createDBContainer.getContainerName() }
+  onError { exception ->
+    if (exception.message.contains('No such container')) {
+      println 'Container not running'
+      removeSchoolNetwork
+    } else {
+      throw exception
+    }
+  }
+  onComplete {
+    println 'removing school network0'
+    removeSchoolNetwork
+  }
+}
+
+task createDBContainer(type: DockerCreateContainer, dependsOn: [removeDBContainer, createSchoolNetwork]) {
+    targetImageId { 'mariadb:latest' }
+    containerName "spring-mariadb"
+    portBindings = ['3306:3306']
+    network containerNetwork
+    env = ["MYSQL_ROOT_PASSWORD=${dbPass}", "MYSQL_DATABASE=${dbName}"]
+}
+
+task startDBContainer(type: DockerStartContainer, dependsOn: [createDBContainer]) {
+  targetContainerId { createDBContainer.getContainerId() }
+}
+
+task createSchoolContainer(type: DockerCreateContainer, dependsOn: [buildSchoolImage, createDBContainer]) {
+    targetImageId { buildImage.getImageId() }
+    portBindings = ['8080:8080']
+    tty = false
 }
 
 task pushImage(type: DockerPushImage) {
