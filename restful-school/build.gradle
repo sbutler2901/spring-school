@@ -35,9 +35,9 @@ dependencies {
 	//testCompile('org.springframework.security:spring-security-test')
        
         // Database 
-        // for testing with persistent non-docker mariadb
+        // for running with persistent, external mariadb
         compile("org.mariadb.jdbc:mariadb-java-client:2.2.4")   
-        // for testing with embedded db
+        // for running with embedded db
 	//runtime('com.h2database:h2')
 }
 
@@ -50,6 +50,7 @@ task buildImage(type: DockerBuildImage) {
   tag = "sbutler2901/spring-school:${project.version}"
   inputDir = projectDir
 }
+
 task pushImage(type: DockerPushImage) {
   imageName = "sbutler2901/spring-school"
   tag = "${project.version}"
