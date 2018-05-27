@@ -12,10 +12,10 @@
 // spring applicaiton\
 1. gradle assemble\
 2. docker build -t sbutler2901/spring-school:latest .\
-3. docker run -d -p 8080:8080 --name spring-school --network spring-net sbutler2901/spring-school	// db should be running before running this command\
+3. docker run -d -p 8080:8080 --name spring-school --network school-net sbutler2901/spring-school	// db should be running before running this command\
 \
 // mariadb\
-docker run -d -p 3306:3306 --env-file mariadb.env --name <mariadb> --network spring-net mariadb\
+docker run -d -p 3306:3306 --env-file mariadb.env --name <mariadb> --network school-net mariadb\
 	// the env file variables must match those set in the spring applications \'93application.properties\'94 file\
 env file should at least contain:\
 	MYSQL_ROOT_PASSWORD=<password>\
