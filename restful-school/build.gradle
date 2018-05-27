@@ -50,19 +50,15 @@ import com.bmuschko.gradle.docker.DockerRegistryCredentials
 
 def containerNetwork = 'school-net'
 def dbContainerName = "spring-mariadb"
-def dbPass = "$System.env.DB_PASS"
-def dbName = "$System.env.DB_NAME"
-
-task buildSchoolImage(type: DockerBuildImage) {
-  dependsOn build
-  tag = "sbutler2901/spring-school:${project.version}"
-  inputDir = projectDir
-}
+def dbPass = System.getenv("MYSQL_ROOT_PASSWORD")
+def dbName = System.getenv("MYSQL_DATABASE")
+def schoolImageName = "sbutler2901/spring-school"
 
 task stopDBContainer(type: DockerStopContainer) {
   targetContainerId { createDBContainer.getContainerName() }
   onError { exception ->
-    if (exception.message.contains('No such container')) {
+    if (exception.message == null) {
+    } else if (exception.message.contains('No such container')) {
           println 'Container not running'
     } else {
       throw exception
@@ -88,11 +84,7 @@ task createSchoolNetwork(type: DockerCreateNetwork, dependsOn: [removeSchoolNetw
 task removeDBContainer(type: DockerRemoveContainer, dependsOn: [stopDBContainer, removeSchoolNetwork]) {
   targetContainerId { dbContainerName }
   onError { exception ->
-    if (exception.message.contains('No such container')) {
-      println 'Container not running'
-    } else {
-      throw exception
-    }
+    println exception.message
   }
 }
 
@@ -100,7 +92,11 @@ task createDBContainer(type: DockerCreateContainer, dependsOn: [removeDBContaine
     targetImageId { 'mariadb:latest' }
     containerName = dbContainerName
     portBindings = ['3306:3306']
-    network containerNetwork
+    network = createSchoolNetwork.getNetworkId()
+    if ( dbPass == null || dbName == null ) {
+      println "createDBContainer: required environment variables are null"
+      throw exception
+    }
     env = ["MYSQL_ROOT_PASSWORD=${dbPass}", "MYSQL_DATABASE=${dbName}"]
 }
 
@@ -108,10 +104,46 @@ task startDBContainer(type: DockerStartContainer, dependsOn: [createDBContainer]
   targetContainerId { createDBContainer.getContainerId() }
 }
 
-task createSchoolContainer(type: DockerCreateContainer, dependsOn: [buildSchoolImage, createDBContainer]) {
-    targetImageId { buildImage.getImageId() }
+//task buildSchoolImage(type: DockerBuildImage, dependsOn: [startDBContainer]) {
+task buildSchoolImage(type: DockerBuildImage, dependsOn: [build]) {
+  tag = "${schoolImageName}:${project.version}"
+  inputDir = file("${projectDir}")
+}
+
+task stopSchoolContainer(type: DockerStopContainer) {
+  targetContainerId { createSchoolContainer.getContainerName() }
+  timeout = 15
+  onError { exception ->
+    if ( exception.message == null ) {
+      println "stopSchoolContainer: exception message null: ${exception}"
+    } else if (exception.message.contains('No such container')) {
+          println 'Container not running'
+    } else {
+        println exception
+        throw exception
+    }
+  }
+}
+
+task removeSchoolContainer(type: DockerRemoveContainer, dependsOn: [stopSchoolContainer]) {
+  targetContainerId { createSchoolContainer.getContainerName() }
+  onError { exception ->
+    println exception.message
+  }
+}
+
+//task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage, createDBContainer]) {
+task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage]) {
+    targetImageId { buildSchoolImage.getImageId() }
+    containerName "spring-school"
     portBindings = ['8080:8080']
     tty = false
+    network = createSchoolNetwork.getNetworkId()
+}
+
+task startSchoolContainer(type: DockerStartContainer, dependsOn: [createSchoolContainer]) {
+//task startSchoolContainer(type: DockerStartContainer, dependsOn: [startDBContainer, createSchoolContainer]) {
+  targetContainerId { createSchoolContainer.getContainerName() }
 }
 
 task pushImage(type: DockerPushImage) {
