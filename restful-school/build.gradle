@@ -49,6 +49,7 @@ import com.bmuschko.gradle.docker.tasks.network.DockerRemoveNetwork
 import com.bmuschko.gradle.docker.DockerRegistryCredentials
 
 def containerNetwork = 'school-net'
+def dbContainerName = "spring-mariadb"
 def dbPass = "$System.env.DB_PASS"
 def dbName = "$System.env.DB_NAME"
 
@@ -58,12 +59,24 @@ task buildSchoolImage(type: DockerBuildImage) {
   inputDir = projectDir
 }
 
-task removeSchoolNetwork(type: DockerRemoveNetwork) {
-  println "removing school network1"
-  targetNetworkId { containerNetwork }
+task stopDBContainer(type: DockerStopContainer) {
+  targetContainerId { createDBContainer.getContainerName() }
+  onError { exception ->
+    if (exception.message.contains('No such container')) {
+          println 'Container not running'
+    } else {
+      throw exception
+    }
+  }
+}
+
+task removeSchoolNetwork(type: DockerRemoveNetwork, dependsOn: [stopDBContainer]) {
+  targetNetworkId { createSchoolNetwork.getNetworkId() }
   onError { exception ->
       if (exception.message.contains('not found')) {
           println 'Docker Network not found.'
+      } else {
+          println exception.message
       }
   }
 }
@@ -72,36 +85,20 @@ task createSchoolNetwork(type: DockerCreateNetwork, dependsOn: [removeSchoolNetw
   networkId = containerNetwork
 }
 
-task stopDBContainer(type: DockerStopContainer) {
-  targetContainerId { createDBContainer.getContainerName() }
-  onError { exception ->
-    if (true) {} else if (exception.message.contains('No such container')) {
-          println 'Container not running'
-    } else {
-      throw exception
-    }
-  }
-}
-
-task removeDBContainer(type: DockerRemoveContainer, dependsOn: [stopDBContainer]) {
-  targetContainerId { createDBContainer.getContainerName() }
+task removeDBContainer(type: DockerRemoveContainer, dependsOn: [stopDBContainer, removeSchoolNetwork]) {
+  targetContainerId { dbContainerName }
   onError { exception ->
     if (exception.message.contains('No such container')) {
       println 'Container not running'
-      removeSchoolNetwork
     } else {
       throw exception
     }
-  }
-  onComplete {
-    println 'removing school network0'
-    removeSchoolNetwork
   }
 }
 
 task createDBContainer(type: DockerCreateContainer, dependsOn: [removeDBContainer, createSchoolNetwork]) {
     targetImageId { 'mariadb:latest' }
-    containerName "spring-mariadb"
+    containerName = dbContainerName
     portBindings = ['3306:3306']
     network containerNetwork
     env = ["MYSQL_ROOT_PASSWORD=${dbPass}", "MYSQL_DATABASE=${dbName}"]
