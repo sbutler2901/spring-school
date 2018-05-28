@@ -139,7 +139,6 @@ task startDBContainer(type: DockerStartContainer, dependsOn: [createDBContainer]
 }
 
 //task buildSchoolImage(type: DockerBuildImage, dependsOn: [build]) {
-//task buildSchoolImage(type: DockerBuildImage, dependsOn: [startDBContainer, build]) {
 task buildSchoolImage(type: DockerBuildImage, dependsOn: [startDBContainer, clean, build]) {
   description 'Builds the Docker image from the application project'
 
@@ -160,8 +159,6 @@ task removeSchoolContainer(type: DockerRemoveContainer, dependsOn: [stopSchoolCo
 }
 
 task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage]) {
-//task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage, createDBContainer]) {
-//task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage]) {
   description 'Creates the school container'
 
   containerName "spring-school"
@@ -172,7 +169,6 @@ task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchool
 }
 
 task startSchoolContainer(type: DockerStartContainer, dependsOn: [createSchoolContainer]) {
-//task startSchoolContainer(type: DockerStartContainer, dependsOn: [startDBContainer, createSchoolContainer]) {
   description 'Starts the school container'
 
   targetContainerId { createSchoolContainer.getContainerName() }
@@ -186,17 +182,4 @@ task pushImage(type: DockerPushImage) {
   registryCredentials = new DockerRegistryCredentials()
   registryCredentials.username = "sbutler2901"
   registryCredentials.password = "$System.env.DOCKERHUB_PASS"
-}
-
-//task cleanContainers(type: Exec, dependsOn:[removeSchoolContainer, removeDBContainer])
-
-task startApp {
-  group 'Docker'
-
-  doFirst {
-    startDBContainer
-  }
-  doLast {
-    startSchoolContainer
-  }
 }
