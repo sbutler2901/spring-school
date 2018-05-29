@@ -8,7 +8,8 @@ buildscript {
   }
   dependencies {
           classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-          classpath "com.bmuschko:gradle-docker-plugin:3.2.8"
+          //classpath "com.bmuschko:gradle-docker-plugin:3.2.8"
+          //classpath "com.github.docker-java:docker-java:3.0.14"
   }
 }
 
@@ -16,7 +17,8 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-apply plugin: 'com.bmuschko.docker-remote-api'
+//apply plugin: 'com.bmuschko.docker-remote-api'
+apply from: "$rootDir/gradle/docker.gradle"
 
 group = 'me.sbsoftware'
 version = '0.1.0'
@@ -36,150 +38,4 @@ dependencies {
         compile("org.mariadb.jdbc:mariadb-java-client:2.2.4")   
         // for running with embedded db
 	//runtime('com.h2database:h2')
-}
-
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
-import com.bmuschko.gradle.docker.tasks.network.DockerCreateNetwork
-import com.bmuschko.gradle.docker.tasks.network.DockerRemoveNetwork
-import com.bmuschko.gradle.docker.DockerRegistryCredentials
-//import com.github.dockerjava.api.NotModifiedException
-
-def containerNetwork = 'school-net'
-def dbContainerName = "spring-mariadb"
-def dbPass = System.getenv("MYSQL_ROOT_PASSWORD")
-def dbName = System.getenv("MYSQL_DATABASE")
-def schoolImageName = "sbutler2901/spring-school"
-
-task stopDBContainer(type: DockerStopContainer) {
-  description 'Stops the running database container'
-
-  targetContainerId { createDBContainer.getContainerName() }    
-  onError { exception ->
-    if (exception.getClass().toString() == "class com.github.dockerjava.api.exception.NotModifiedException") {
-      println 'Container not running'
-    } else if (exception.message != null && exception.message.contains('No such container')) {
-      println 'Container not running'
-    } else {
-      throw exception
-    }
-  }
-}
-
-task removeDBContainer(type: DockerRemoveContainer, dependsOn: [stopDBContainer]) {
-  description 'Removes the DB container from Docker'
-
-  targetContainerId { dbContainerName }
-  onError { exception ->
-    println exception.message
-  }
-}
-
-task stopSchoolContainer(type: DockerStopContainer) {
-  description 'Stops the running school container'
-
-  targetContainerId { createSchoolContainer.getContainerName() }
-  timeout = 15
-  onError { exception ->
-    if (exception.getClass().toString() == "class com.github.dockerjava.api.exception.NotModifiedException") {
-      println 'Container not running'
-    } else if (exception.message != null && exception.message.contains('No such container')) {
-      println 'Container not running'
-    } else {
-      throw exception
-    }
-  }
-}
-
-task removeSchoolNetwork(type: DockerRemoveNetwork, dependsOn: [stopDBContainer, stopSchoolContainer]) {
-  description 'Removes the Docker Bridge network used by the application and DB'
-    
-  targetNetworkId { createSchoolNetwork.getNetworkId() }
-  onError { exception ->
-      if (exception.message.contains('not found')) {
-          println 'Docker Network not found.'
-      } else {
-          println exception.message
-      }
-  }
-}
-
-task createSchoolNetwork(type: DockerCreateNetwork, dependsOn: [removeSchoolNetwork]) {
-  description 'Creates the Docker Bridge network used by the application and the DB'
-
-  networkId = containerNetwork
-}
-
-task createDBContainer(type: DockerCreateContainer, dependsOn: [removeDBContainer, createSchoolNetwork]) {
-    description 'Creates the DB container'
-
-    targetImageId { 'mariadb:latest' }
-    containerName = dbContainerName
-    portBindings = ['3306:3306']
-    if ( dbPass == null || dbName == null ) {
-      throw new GradleException("createDBContainer: required environment variables are null");
-    }
-    env = ["MYSQL_ROOT_PASSWORD=${dbPass}", "MYSQL_DATABASE=${dbName}"]
-    network = createSchoolNetwork.getNetworkId()
-}
-
-task startDBContainer(type: DockerStartContainer, dependsOn: [createDBContainer]) {
-  description 'Starts the DB Container'
-
-  targetContainerId { createDBContainer.getContainerId() }
-  doLast {
-    println 'Waiting for DB Container intialization. Pausing for 30secs'
-    sleep(30 * 1000)
-  }
-}
-
-//task buildSchoolImage(type: DockerBuildImage, dependsOn: [build]) {
-task buildSchoolImage(type: DockerBuildImage, dependsOn: [startDBContainer, clean, build]) {
-  description 'Builds the Docker image from the application project'
-
-  tag = "${schoolImageName}:${project.version}"
-  inputDir = file("${projectDir}")
-
-  clean.mustRunAfter startDBContainer
-  build.mustRunAfter clean
-}
-
-task removeSchoolContainer(type: DockerRemoveContainer, dependsOn: [stopSchoolContainer]) {
-  description 'Removes the school container from Docker'
-
-  targetContainerId { createSchoolContainer.getContainerName() }
-  onError { exception ->
-    println exception.message
-  }
-}
-
-task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage]) {
-  description 'Creates the school container'
-
-  containerName "spring-school"
-  portBindings = ['8080:8080']
-  tty = false
-  targetImageId { buildSchoolImage.getImageId() }
-  network = createSchoolNetwork.getNetworkId() 
-}
-
-task startSchoolContainer(type: DockerStartContainer, dependsOn: [createSchoolContainer]) {
-  description 'Starts the school container'
-
-  targetContainerId { createSchoolContainer.getContainerName() }
-}
-
-task pushImage(type: DockerPushImage) {
-  description 'Pushes the school application image to the docker hub registry'
-
-  imageName = "sbutler2901/spring-school"
-  tag = "${project.version}"
-  registryCredentials = new DockerRegistryCredentials()
-  registryCredentials.username = "sbutler2901"
-  registryCredentials.password = "$System.env.DOCKERHUB_PASS"
 }
