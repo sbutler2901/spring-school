@@ -22,7 +22,14 @@ import com.bmuschko.gradle.docker.DockerRegistryCredentials
 
 def containerNetwork = 'school-net'
 def dbContainerName = 'spring-mariadb'
+def schoolContainerName = 'spring-school'
+def dbPortBindings = '3306:3306'
+def schoolPortBindings = '8080:8080'
 def schoolImageName = 'sbutler2901/spring-school'
+def dbImageName = 'mariadb:latest'
+def registryUserName = 'sbutler2901'
+def registerPass = REGISTRY_PASS
+def dbInitWaitTime = 30
 
 // Define using environment variables
 //def dbPass = System.getenv("MYSQL_ROOT_PASSWORD")
@@ -89,9 +96,9 @@ task createSchoolNetwork(type: DockerCreateNetwork, dependsOn: [removeSchoolNetw
 task createDBContainer(type: DockerCreateContainer, dependsOn: [removeDBContainer, createSchoolNetwork]) {
     description 'Creates the DB container'
 
-    targetImageId { 'mariadb:latest' }
+    targetImageId { dbImageName }
     containerName = dbContainerName
-    portBindings = ['3306:3306']
+    portBindings = [dbPortBindings]
     if ( dbPass == null || dbName == null ) {
         throw new GradleException('createDBContainer: required environment variables are null')
     }
@@ -112,8 +119,8 @@ task startDBContainer(type: DockerStartContainer, dependsOn: [createDBContainer]
 
     targetContainerId { createDBContainer.getContainerId() }
     doLast {
-        println 'Waiting for DB Container intialization. Pausing for 30secs'
-        sleep(30 * 1000)
+        println "Waiting for DB Container intialization. Pausing for ${dbInitWaitTime}secs"
+        sleep(dbInitWaitTime * 1000)
     }
 }
 
@@ -139,8 +146,8 @@ task removeSchoolContainer(type: DockerRemoveContainer, dependsOn: [stopSchoolCo
 task createSchoolContainer(type: DockerCreateContainer, dependsOn: [removeSchoolContainer, buildSchoolImage]) {
     description 'Creates the school container'
 
-    containerName 'spring-school'
-    portBindings = ['8080:8080']
+    containerName = schoolContainerName
+    portBindings = [schoolPortBindings]
     tty = false
     targetImageId { buildSchoolImage.getImageId() }
     network = createSchoolNetwork.getNetworkId()
@@ -155,9 +162,9 @@ task startSchoolContainer(type: DockerStartContainer, dependsOn: [createSchoolCo
 task pushImage(type: DockerPushImage) {
     description 'Pushes the school application image to the docker hub registry'
 
-    imageName = 'sbutler2901/spring-school'
+    imageName = schoolImageName
     tag = "${project.version}"
     registryCredentials = new DockerRegistryCredentials()
-    registryCredentials.username = 'sbutler2901'
-    registryCredentials.password = "$System.env.DOCKERHUB_PASS"
+    registryCredentials.username = registryUserName
+    registryCredentials.password = registerPass
 }
