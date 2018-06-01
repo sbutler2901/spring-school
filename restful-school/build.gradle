@@ -1,14 +1,15 @@
 buildscript {
-  ext {
-    springBootVersion = '2.0.2.RELEASE'
-  }
-  repositories {
-          //mavenCentral()
-          jcenter()
-  }
-  dependencies {
-          classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-  }
+    ext {
+        springBootVersion = '2.0.2.RELEASE'
+    }
+    repositories {
+        //mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.8'
+    }
 }
 
 apply plugin: 'java'
@@ -22,17 +23,17 @@ version = '0.1.0'
 sourceCompatibility = 1.8
 
 dependencies {
-        // Spring
-	compile('org.springframework.boot:spring-boot-starter-data-jpa')
-	compile('org.springframework.boot:spring-boot-starter-web') 
-	testCompile('org.springframework.boot:spring-boot-starter-test')
+    // Spring
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
 
-	//compile('org.springframework.boot:spring-boot-starter-security')
-	//testCompile('org.springframework.security:spring-security-test')
-       
-        // Database 
-        // for running with persistent, external mariadb
-        compile("org.mariadb.jdbc:mariadb-java-client:2.2.4")   
-        // for running with embedded db
-	//runtime('com.h2database:h2')
+    //compile('org.springframework.boot:spring-boot-starter-security')
+    //testCompile('org.springframework.security:spring-security-test')
+
+    // Database
+    // for running with persistent, external mariadb
+    compile('org.mariadb.jdbc:mariadb-java-client:2.2.4')
+    // for running with embedded db
+    //runtime('com.h2database:h2')
 }
