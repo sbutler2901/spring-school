@@ -7,16 +7,21 @@ import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/topics")
 public class TopicController {
 
+    private final TopicService topicService;
+
     @Autowired
-    private TopicService topicService;
+    public TopicController(TopicService topicService) {
+        this.topicService = topicService;
+    }
 
     /**
      * Provides rest service for getting all topics
      * @return json response containing all existing topics
      */
-    @GetMapping("/topics")
+    @GetMapping()
     public List<Topic> getAllTopics(){
         return topicService.getAllTopics();
     }
@@ -26,7 +31,7 @@ public class TopicController {
      * @param id of the topic being retrieved
      * @return json response containing the requested topic
      */
-    @GetMapping("/topics/{id}")
+    @GetMapping("/{id}")
     public Topic getTopic(@PathVariable String id) {
         return topicService.getTopic(id);
     }
@@ -36,7 +41,7 @@ public class TopicController {
      * @param topic the topic to be added
      * @return the newly added topic
      */
-    @RequestMapping(value="/topics", method=RequestMethod.POST)
+    @PostMapping()
     public Topic addTopic(@RequestBody Topic topic) {
         return topicService.addTopic(topic);
     }
@@ -46,10 +51,13 @@ public class TopicController {
      * @param id of the topic being updated passed in the url
      * @param topic the topic with new updates
      */
-    @RequestMapping(value="/topics/{id}", method=RequestMethod.PUT)
-    public void updateTopic(@PathVariable String id, @RequestBody Topic topic) {
+    @PutMapping(value = "/{id}")
+    public Topic updateTopic(@PathVariable String id, @RequestBody Topic topic) {
         if ( id.equals(topic.getId()) ) {
-            topicService.updateTopic(topic);
+            return topicService.updateTopic(topic);
+        } else {
+            // TODO: return error
+            return null;
         }
     }
 
@@ -57,7 +65,7 @@ public class TopicController {
      * Provides rest service for deleting a topic
      * @param id of the topic to be deleted
      */
-    @RequestMapping(value="/topics/{id}", method=RequestMethod.DELETE)
+    @DeleteMapping(value = "/{id}")
     public void deleteTopic(@PathVariable String id) {
         topicService.deleteTopic(id);
     }
