@@ -11,7 +11,7 @@ import javax.persistence.*;
 public class Topic {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    //@GeneratedValue(strategy=GenerationType.AUTO)
     @Column(name="topic_id")
     private String id;
 
@@ -24,10 +24,11 @@ public class Topic {
 //    @OneToMany
 //    private Course[] courses;
 
-    public Topic() {
-    }
-
     public Topic(String id, String name, String description) {
+        if ( id == null ) throw new IllegalArgumentException("id was null");
+        if ( name == null ) throw new IllegalArgumentException("name was null");
+        if ( description == null ) throw new IllegalArgumentException("description was null");
+
         this.id = id;
         this.name = name;
         this.description = description;
