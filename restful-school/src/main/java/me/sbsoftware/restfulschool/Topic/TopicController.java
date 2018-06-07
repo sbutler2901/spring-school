@@ -33,7 +33,7 @@ public class TopicController {
      */
     @GetMapping("/{id}")
     public Topic getTopic(@PathVariable String id) {
-        return topicService.getTopic(id);
+        return topicService.getTopic(id).orElse(null);
     }
 
     /**

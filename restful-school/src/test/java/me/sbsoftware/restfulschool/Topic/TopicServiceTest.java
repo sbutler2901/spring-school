@@ -39,9 +39,9 @@ public class TopicServiceTest {
         when(topicRepository.findById("java")).thenReturn(Optional.of(javaTopic));
         when(topicRepository.findById("javascript")).thenReturn(Optional.empty());
 
-        assert(topicService.getTopic("java").equals(javaTopic));
-        assert(topicService.getTopic("javascript") == null);
-        assert(topicService.getTopic(null) == null);
+        assert(topicService.getTopic("java").map( t -> t.equals(javaTopic)).orElse(false));
+        assert(!topicService.getTopic("javascript").map(t -> t.equals(jsTopic)).orElse(false));
+        assert(!topicService.getTopic(null).isPresent());
     }
 
     @Test
