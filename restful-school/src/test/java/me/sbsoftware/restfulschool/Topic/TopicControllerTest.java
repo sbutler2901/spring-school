@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -47,7 +48,7 @@ public class TopicControllerTest {
 
     @Test
     public void getTopic() throws Exception {
-        Mockito.when(topicService.getTopic("java")).thenReturn(javaTopic);
+        Mockito.when(topicService.getTopic("java")).thenReturn(Optional.of(javaTopic));
 
         mockMvc.perform(get("/topics/java"))
                 .andExpect(MockMvcResultMatchers.status().isOk())

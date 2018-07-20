@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 // TODO: return exceptions on error rather than null?
 
@@ -32,18 +33,14 @@ public class TopicService {
     /**
      * Requests a specific topic from the DB
      * @param id of the topic to be retrieved
-     * @return the topic found matching the id provide if it exists, null otherwise
+     * @return an optional containing the topic found matching the id provide if it exists, empty otherwise
      */
-    Topic getTopic(String id) {
-        if ( id == null ) return null;
-
-        return topicRepository.findById(id).orElse(null);
-    }
+    Optional<Topic> getTopic(String id) { return topicRepository.findById(id); }
 
     /**
      * Adds a new topic to the DB
      * @param topic to be added to the DB
-     * @return the topic saved in the DB
+     * @return the topic saved in the DB, null if a topic was not provided
      */
     Topic addTopic(Topic topic) {
         if ( topic == null ) return null;
@@ -55,7 +52,7 @@ public class TopicService {
     /**
      * Updates a topic in the DB
      * @param topic to be updated in the DB
-     * @return the topic updated in the DB
+     * @return the topic updated in the DB. Null if topic or its id was null, or topic does not exist in database
      */
     Topic updateTopic(Topic topic) {
         if ( topic == null || topic.getId() == null || !topicRepository.existsById(topic.getId())) {
@@ -66,14 +63,14 @@ public class TopicService {
     }
 
     // TODO: handle deletion of topic which has child courses
-    // TODO: handle thrown error
     /**
      * Deletes a topic from the DB
      * @param id of the topic to be deleted
-     * @return the id of the topic deleted if it existed
+     * @return the id of the topic deleted if it existed, null if id was null, if id does not exist
      */
     String deleteTopic(String id) {
-        if (id == null || !topicRepository.existsById(id)) return null;
+        if (id == null || !topicRepository.existsById(id))
+            return null;
         else {
             topicRepository.deleteById(id);
             return id;
