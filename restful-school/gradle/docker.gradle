@@ -168,3 +168,10 @@ task pushImage(type: DockerPushImage) {
     registryCredentials.username = registryUserName
     registryCredentials.password = registerPass
 }
+
+task preTest {
+    description 'Starts the DB Container before running tests'
+    //group 'Docker'
+    dependsOn startDBContainer
+}
+test.dependsOn preTest
